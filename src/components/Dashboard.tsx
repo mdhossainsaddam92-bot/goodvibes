@@ -76,13 +76,18 @@ export const Dashboard = ({ username, onBack }: DashboardProps) => {
     const shareText = `${t.socialShare}\n${window.location.origin}/${username}\n\n"${message}"\n\n${t.hashtags}`;
     
     try {
-      if (navigator.share) {
+      if (navigator.share && navigator.canShare && navigator.canShare({
+        title: 'Positive Message Received',
+        text: shareText,
+        url: `${window.location.origin}/${username}`
+      })) {
         await navigator.share({
           title: 'Positive Message Received',
           text: shareText,
           url: `${window.location.origin}/${username}`
         });
       } else {
+        // Fallback to clipboard
         await navigator.clipboard.writeText(shareText);
         toast({
           description: "Share text copied to clipboard!",
@@ -90,7 +95,20 @@ export const Dashboard = ({ username, onBack }: DashboardProps) => {
         });
       }
     } catch (error) {
-      console.error('Error sharing:', error);
+      // Always fallback to clipboard if sharing fails
+      try {
+        await navigator.clipboard.writeText(shareText);
+        toast({
+          description: "Share text copied to clipboard!",
+          duration: 3000,
+        });
+      } catch (clipboardError) {
+        toast({
+          description: "Unable to share. Please copy the link manually.",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
     }
   };
 
