@@ -70,13 +70,15 @@ export default function Auth() {
         const signupData = authSchema.parse({ email, password, username });
 
         // Check if username is available
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('username', signupData.username)
-          .single();
+        const { data: isAvailable, error: availabilityError } = await supabase
+          .rpc('is_username_available', { username_to_check: signupData.username });
 
-        if (existingProfile) {
+        if (availabilityError) {
+          console.error('Error checking username availability:', availabilityError);
+          throw new Error('Unable to verify username availability. Please try again.');
+        }
+
+        if (!isAvailable) {
           throw new Error('Username is already taken');
         }
 
