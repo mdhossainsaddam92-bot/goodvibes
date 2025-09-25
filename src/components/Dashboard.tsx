@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import { Heart, Share, ArrowLeft, Download } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -72,44 +73,38 @@ export const Dashboard = ({ username, onBack }: DashboardProps) => {
     }
   };
 
-  const handleShare = async (message: string) => {
-    const shareText = `${t.socialShare}\n${window.location.origin}/${username}\n\n"${message}"\n\n${t.hashtags}`;
+  const handleShare = (message: string, platform: string) => {
+    const shareText = `${t.socialShare} ${message}`;
+    const shareUrl = `${window.location.origin}/${username}`;
     
-    try {
-      if (navigator.share && navigator.canShare && navigator.canShare({
-        title: 'Positive Message Received',
-        text: shareText,
-        url: `${window.location.origin}/${username}`
-      })) {
-        await navigator.share({
-          title: 'Positive Message Received',
-          text: shareText,
-          url: `${window.location.origin}/${username}`
-        });
-      } else {
-        // Fallback to clipboard
-        await navigator.clipboard.writeText(shareText);
+    let url = '';
+    
+    switch (platform) {
+      case 'facebook':
+        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+        break;
+      case 'whatsapp':
+        url = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
+        break;
+      case 'telegram':
+        url = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+        break;
+      case 'linkedin':
+        url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+        break;
+      case 'instagram':
+        // Instagram doesn't have direct URL sharing, so copy to clipboard
+        navigator.clipboard.writeText(shareText + ' ' + shareUrl);
         toast({
-          description: "Share text copied to clipboard!",
+          description: "Text copied for Instagram! Paste it in your story or post.",
           duration: 3000,
         });
-      }
-    } catch (error) {
-      // Always fallback to clipboard if sharing fails
-      try {
-        await navigator.clipboard.writeText(shareText);
-        toast({
-          description: "Share text copied to clipboard!",
-          duration: 3000,
-        });
-      } catch (clipboardError) {
-        toast({
-          description: "Unable to share. Please copy the link manually.",
-          variant: "destructive",
-          duration: 3000,
-        });
-      }
+        return;
+      default:
+        return;
     }
+    
+    window.open(url, '_blank', 'width=600,height=400');
   };
 
   const formatDate = (dateString: string) => {
@@ -186,15 +181,35 @@ export const Dashboard = ({ username, onBack }: DashboardProps) => {
                         <span className="text-xs text-muted-foreground">
                           {formatDate(msg.created_at)}
                         </span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleShare(msg.message)}
-                          className="text-xs"
-                        >
-                          <Share className="w-3 h-3 mr-1" />
-                          {t.shareButton}
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              <Share className="w-3 h-3 mr-1" />
+                              {t.shareButton}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem onClick={() => handleShare(msg.message, 'facebook')}>
+                              Facebook
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleShare(msg.message, 'whatsapp')}>
+                              WhatsApp
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleShare(msg.message, 'telegram')}>
+                              Telegram
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleShare(msg.message, 'linkedin')}>
+                              LinkedIn
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleShare(msg.message, 'instagram')}>
+                              Instagram
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </div>
