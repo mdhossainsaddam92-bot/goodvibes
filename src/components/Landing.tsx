@@ -20,7 +20,7 @@ export const Landing = ({ onNext, user, onSignOut }: LandingProps) => {
     <div className="min-h-screen flex items-center justify-center p-4 relative">
       <LanguageToggle onLanguageChange={setLanguage} currentLang={language} />
       
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex gap-2">
         {user ? (
           <Button variant="outline" onClick={onSignOut}>
             <LogOut className="w-4 h-4 mr-2" />

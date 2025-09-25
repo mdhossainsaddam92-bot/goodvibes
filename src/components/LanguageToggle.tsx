@@ -13,7 +13,7 @@ export const LanguageToggle = ({ onLanguageChange, currentLang }: LanguageToggle
       variant="outline"
       size="sm"
       onClick={() => onLanguageChange(currentLang === 'en' ? 'bn' : 'en')}
-      className="fixed top-4 right-4 z-50 bg-card/80 backdrop-blur-sm"
+      className="fixed top-4 left-4 z-50 bg-card/80 backdrop-blur-sm"
     >
       <Globe className="w-4 h-4 mr-2" />
       {currentLang === 'en' ? 'বাংলা' : 'English'}
