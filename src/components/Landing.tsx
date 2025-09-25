@@ -1,19 +1,38 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, Sparkles, MessageCircle } from "lucide-react";
+import { Heart, Sparkles, MessageCircle, LogIn, LogOut } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageToggle } from "./LanguageToggle";
+import { User } from "@supabase/supabase-js";
+import { useNavigate } from "react-router-dom";
 
 interface LandingProps {
   onNext: () => void;
+  user: User | null;
+  onSignOut: () => Promise<void>;
 }
 
-export const Landing = ({ onNext }: LandingProps) => {
+export const Landing = ({ onNext, user, onSignOut }: LandingProps) => {
   const { language, setLanguage, t } = useLanguage();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
       <LanguageToggle onLanguageChange={setLanguage} currentLang={language} />
+      
+      <div className="absolute top-4 right-4">
+        {user ? (
+          <Button variant="outline" onClick={onSignOut}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        ) : (
+          <Button variant="outline" onClick={() => navigate('/auth')}>
+            <LogIn className="w-4 h-4 mr-2" />
+            Sign In
+          </Button>
+        )}
+      </div>
       
       <div className="max-w-2xl mx-auto text-center space-y-8">
         {/* Decorative elements */}
@@ -65,7 +84,7 @@ export const Landing = ({ onNext }: LandingProps) => {
           size="lg"
           className="btn-gradient text-white px-8 py-6 text-lg font-semibold rounded-full mt-8"
         >
-          {t.createButton}
+          {user ? "View My Dashboard" : t.createButton}
         </Button>
       </div>
     </div>

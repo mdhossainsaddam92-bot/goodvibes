@@ -1,31 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { Copy, ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, LogOut } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageToggle } from "./LanguageToggle";
 import { useToast } from "@/hooks/use-toast";
+import { User } from "@supabase/supabase-js";
 
 interface LinkGeneratorProps {
   onBack: () => void;
-  onViewDashboard: (username: string) => void;
+  onViewDashboard: () => void;
+  user: User | null;
+  userProfile: { username: string } | null;
+  onSignOut: () => Promise<void>;
 }
 
-export const LinkGenerator = ({ onBack, onViewDashboard }: LinkGeneratorProps) => {
-  const [username, setUsername] = useState("");
-  const [generatedLink, setGeneratedLink] = useState("");
+export const LinkGenerator = ({ onBack, onViewDashboard, user, userProfile, onSignOut }: LinkGeneratorProps) => {
   const { language, setLanguage, t } = useLanguage();
   const { toast } = useToast();
 
-  const handleGenerate = () => {
-    if (!username.trim()) return;
-    
-    const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
-    const link = `${window.location.origin}/${cleanUsername}`;
-    setGeneratedLink(link);
-  };
+  const generatedLink = userProfile ? `${window.location.origin}/${userProfile.username}` : '';
 
   const handleCopy = async () => {
     if (!generatedLink) return;
@@ -52,16 +45,18 @@ export const LinkGenerator = ({ onBack, onViewDashboard }: LinkGeneratorProps) =
     }
   };
 
-  const handleViewDashboard = () => {
-    if (generatedLink) {
-      const usernameFromLink = generatedLink.split('/').pop() || '';
-      onViewDashboard(usernameFromLink);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
       <LanguageToggle onLanguageChange={setLanguage} currentLang={language} />
+      
+      <div className="absolute top-4 right-4">
+        {user && (
+          <Button variant="outline" onClick={onSignOut}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        )}
+      </div>
       
       <div className="max-w-md mx-auto w-full">
         <Button
@@ -76,49 +71,19 @@ export const LinkGenerator = ({ onBack, onViewDashboard }: LinkGeneratorProps) =
         <Card className="card-warm border-none">
           <CardHeader className="text-center pb-6">
             <CardTitle className="text-2xl gradient-text">
-              Generate Your Link ✨
+              Your Appreciation Link ✨
             </CardTitle>
           </CardHeader>
           
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="username" className="text-sm font-medium">
-                {t.nameLabel}
-              </Label>
-              <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder={t.namePlaceholder}
-                className="bg-input/50 border-border/50 focus:bg-background transition-colors"
-                onKeyPress={(e) => e.key === 'Enter' && handleGenerate()}
-              />
-            </div>
-
-            <Button 
-              onClick={handleGenerate}
-              disabled={!username.trim()}
-              className="w-full btn-gradient text-white font-semibold py-3"
-            >
-              {t.generateButton}
-            </Button>
-
-            {generatedLink && (
-              <div className="space-y-4 pt-4 border-t border-border/50">
+            {userProfile ? (
+              <>
                 <div className="bg-muted/50 p-4 rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-2">Your appreciation link:</p>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 text-sm font-mono bg-background/50 px-3 py-2 rounded border">
+                  <p className="text-sm text-muted-foreground mb-2">Share this link to receive positive messages:</p>
+                  <div className="bg-background/50 px-3 py-2 rounded border">
+                    <code className="text-sm font-mono break-all">
                       {generatedLink}
                     </code>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleCopy}
-                      className="shrink-0"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
                   </div>
                 </div>
                 
@@ -127,18 +92,29 @@ export const LinkGenerator = ({ onBack, onViewDashboard }: LinkGeneratorProps) =
                     onClick={handleCopy}
                     className="flex-1 btn-gradient text-white font-semibold"
                   >
-                    <Copy className="w-4 h-4 mr-2" />
-                    {t.copyButton}
+                    Copy Link
                   </Button>
                   
                   <Button
                     variant="outline"
-                    onClick={handleViewDashboard}
+                    onClick={onViewDashboard}
                     className="shrink-0"
                   >
                     <ExternalLink className="w-4 h-4" />
                   </Button>
                 </div>
+              </>
+            ) : (
+              <div className="text-center space-y-4">
+                <p className="text-muted-foreground">
+                  You need to sign in to create your appreciation link.
+                </p>
+                <Button 
+                  onClick={() => window.location.href = '/auth'}
+                  className="btn-gradient text-white font-semibold"
+                >
+                  Sign In to Continue
+                </Button>
               </div>
             )}
           </CardContent>

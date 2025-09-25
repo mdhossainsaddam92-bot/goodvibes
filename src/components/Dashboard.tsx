@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
-import { Heart, Share, ArrowLeft, Download } from "lucide-react";
+import { Heart, Share, ArrowLeft, Download, LogOut } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageToggle } from "./LanguageToggle";
 import { useToast } from "@/hooks/use-toast";
@@ -17,9 +17,10 @@ interface Message {
 interface DashboardProps {
   username: string;
   onBack: () => void;
+  onSignOut: () => Promise<void>;
 }
 
-export const Dashboard = ({ username, onBack }: DashboardProps) => {
+export const Dashboard = ({ username, onBack, onSignOut }: DashboardProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { language, setLanguage, t } = useLanguage();
@@ -132,6 +133,13 @@ export const Dashboard = ({ username, onBack }: DashboardProps) => {
   return (
     <div className="min-h-screen p-4 relative">
       <LanguageToggle onLanguageChange={setLanguage} currentLang={language} />
+      
+      <div className="absolute top-4 right-4">
+        <Button variant="outline" onClick={onSignOut}>
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign Out
+        </Button>
+      </div>
       
       <div className="max-w-2xl mx-auto">
         <Button
