@@ -18,9 +18,10 @@ interface DashboardProps {
   username: string;
   onBack: () => void;
   onSignOut: () => Promise<void>;
+  onViewAdminDashboard?: () => void;
 }
 
-export const Dashboard = ({ username, onBack, onSignOut }: DashboardProps) => {
+export const Dashboard = ({ username, onBack, onSignOut, onViewAdminDashboard }: DashboardProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { language, setLanguage, t } = useLanguage();
@@ -143,7 +144,12 @@ export const Dashboard = ({ username, onBack, onSignOut }: DashboardProps) => {
     <div className="min-h-screen p-4 relative">
       <LanguageToggle onLanguageChange={setLanguage} currentLang={language} />
       
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex gap-2">
+        {onViewAdminDashboard && (
+          <Button variant="outline" onClick={onViewAdminDashboard}>
+            Admin Dashboard
+          </Button>
+        )}
         <Button variant="outline" onClick={onSignOut}>
           <LogOut className="w-4 h-4 mr-2" />
           Sign Out

@@ -39,6 +39,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          role: Database["public"]["Enums"]["app_role"]
           updated_at: string
           user_id: string
           username: string
@@ -46,6 +47,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id: string
           username: string
@@ -53,8 +55,33 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          created_at: string | null
+          id: string
+          message_count: number | null
+          updated_at: string | null
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message_count?: number | null
+          updated_at?: string | null
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message_count?: number | null
+          updated_at?: string | null
           username?: string
         }
         Relationships: []
@@ -64,13 +91,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_admin_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active_usernames: number
+          total_messages: number
+          total_users: number
+        }[]
+      }
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      is_admin: {
+        Args: { user_uuid: string }
+        Returns: boolean
+      }
       is_username_available: {
         Args: { username_to_check: string }
         Returns: boolean
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -197,6 +240,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

@@ -4,10 +4,11 @@ import { Landing } from "@/components/Landing";
 import { LinkGenerator } from "@/components/LinkGenerator";
 import { MessageForm } from "@/components/MessageForm";
 import { Dashboard } from "@/components/Dashboard";
+import { AdminDashboard } from "@/components/AdminDashboard";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
-type View = 'landing' | 'generator' | 'dashboard';
+type View = 'landing' | 'generator' | 'dashboard' | 'admin';
 
 const Index = () => {
   const { username } = useParams();
@@ -15,7 +16,7 @@ const Index = () => {
   const [currentView, setCurrentView] = useState<View>('landing');
   const [currentUsername, setCurrentUsername] = useState<string>('');
   const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<{ username: string } | null>(null);
+  const [userProfile, setUserProfile] = useState<{ username: string; role?: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ const Index = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('username')
+        .select('username, role')
         .eq('user_id', userId)
         .single();
 
@@ -60,6 +61,13 @@ const Index = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewAdminDashboard = () => {
+    if (!user || !userProfile || userProfile.role !== 'admin') {
+      return;
+    }
+    setCurrentView('admin');
   };
 
   // If URL has username, show message form
@@ -111,6 +119,18 @@ const Index = () => {
         <Dashboard 
           username={userProfile.username}
           onBack={() => setCurrentView('generator')}
+          onSignOut={handleSignOut}
+          onViewAdminDashboard={userProfile.role === 'admin' ? handleViewAdminDashboard : undefined}
+        />
+      );
+    case 'admin':
+      if (!user || !userProfile || userProfile.role !== 'admin') {
+        navigate('/auth');
+        return null;
+      }
+      return (
+        <AdminDashboard 
+          onBack={() => setCurrentView('dashboard')}
           onSignOut={handleSignOut}
         />
       );
