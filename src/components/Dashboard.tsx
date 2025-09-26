@@ -210,6 +210,17 @@ export const Dashboard = ({ username, onBack, onSignOut }: DashboardProps) => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem onClick={() => {
+                              const shareText = `${t.socialShare} ${msg.message}`;
+                              const shareUrl = `${window.location.origin}/${username}`;
+                              navigator.clipboard.writeText(shareText + ' ' + shareUrl);
+                              toast({
+                                description: "Text copied to clipboard!",
+                                duration: 3000,
+                              });
+                            }}>
+                              Copy Text
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleShare(msg.message, 'facebook')}>
                               Facebook
                             </DropdownMenuItem>
