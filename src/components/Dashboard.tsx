@@ -78,33 +78,41 @@ export const Dashboard = ({ username, onBack, onSignOut }: DashboardProps) => {
     const shareText = `${t.socialShare} ${message}`;
     const shareUrl = `${window.location.origin}/${username}`;
     
+    // Copy to clipboard for all platforms
+    navigator.clipboard.writeText(shareText + ' ' + shareUrl);
+    
     let url = '';
+    let toastMessage = '';
     
     switch (platform) {
       case 'facebook':
         url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+        toastMessage = "Text copied! Facebook is opening - paste it in your post.";
         break;
       case 'whatsapp':
         url = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
+        toastMessage = "Text copied! WhatsApp is opening.";
         break;
       case 'telegram':
         url = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+        toastMessage = "Text copied! Telegram is opening.";
         break;
       case 'linkedin':
         url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+        toastMessage = "Text copied! LinkedIn is opening - paste it in your post.";
         break;
       case 'instagram':
-        // Copy to clipboard and redirect to Instagram
-        navigator.clipboard.writeText(shareText + ' ' + shareUrl);
         url = 'https://www.instagram.com/';
-        toast({
-          description: "Text copied! Instagram is opening - paste it in your story or post.",
-          duration: 3000,
-        });
+        toastMessage = "Text copied! Instagram is opening - paste it in your story or post.";
         break;
       default:
         return;
     }
+    
+    toast({
+      description: toastMessage,
+      duration: 3000,
+    });
     
     window.open(url, '_blank', 'width=600,height=400');
   };
