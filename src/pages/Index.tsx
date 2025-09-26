@@ -1,0 +1,159 @@
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Landing } from "@/components/Landing";
+import { LinkGenerator } from "@/components/LinkGenerator";
+import { MessageForm } from "@/components/MessageForm";
+import { Dashboard } from "@/components/Dashboard";
+import { AdminDashboard } from "@/components/AdminDashboard";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
+
+type View = 'landing' | 'generator' | 'dashboard' | 'admin';
+
+const Index = () => {
+  const { username } = useParams();
+  const navigate = useNavigate();
+  const [currentView, setCurrentView] = useState<View>('landing');
+  const [currentUsername, setCurrentUsername] = useState<string>('');
+  const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<{ username: string; role?: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  useEffect(() => {
+    // Check current auth status
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        setTimeout(() => {
+          fetchUserProfile(session.user.id);
+        }, 0);
+      } else {
+        setUserProfile(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, role')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) throw error;
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewAdminDashboard = () => {
+    if (!user || !userProfile || userProfile.role !== 'admin') {
+      return;
+    }
+    setCurrentView('admin');
+  };
+
+  // If URL has username, show message form
+  if (username) {
+    return <MessageForm username={username} />;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleViewDashboard = () => {
+    if (!user || !userProfile) {
+      navigate('/auth');
+      return;
+    }
+    setCurrentView('dashboard');
+  };
+
+  const handleSignOut = async () => {
+    if (isSigningOut) return; // Prevent multiple simultaneous sign out attempts
+    
+    setIsSigningOut(true);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      // Handle sign out error silently as the auth state listener will clear the user state
+      console.log('Sign out completed');
+    } finally {
+      setIsSigningOut(false);
+    }
+    setCurrentView('landing');
+  };
+
+  switch (currentView) {
+    case 'generator':
+      return (
+        <LinkGenerator 
+          onBack={() => setCurrentView('landing')}
+          onViewDashboard={handleViewDashboard}
+          user={user}
+          userProfile={userProfile}
+          onSignOut={handleSignOut}
+        />
+      );
+    case 'dashboard':
+      if (!user || !userProfile) {
+        navigate('/auth');
+        return null;
+      }
+      return (
+        <Dashboard 
+          username={userProfile.username}
+          onBack={() => setCurrentView('generator')}
+          onSignOut={handleSignOut}
+          onViewAdminDashboard={userProfile.role === 'admin' ? handleViewAdminDashboard : undefined}
+        />
+      );
+    case 'admin':
+      if (!user || !userProfile || userProfile.role !== 'admin') {
+        navigate('/auth');
+        return null;
+      }
+      return (
+        <AdminDashboard 
+          onBack={() => setCurrentView('dashboard')}
+          onSignOut={handleSignOut}
+        />
+      );
+    default:
+      return (
+        <Landing 
+          onNext={() => setCurrentView('generator')} 
+          user={user}
+          onSignOut={handleSignOut}
+        />
+      );
+  }
+};
+
+export default Index;
