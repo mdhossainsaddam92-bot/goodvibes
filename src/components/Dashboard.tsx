@@ -94,13 +94,14 @@ export const Dashboard = ({ username, onBack, onSignOut }: DashboardProps) => {
         url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
         break;
       case 'instagram':
-        // Instagram doesn't have direct URL sharing, so copy to clipboard
+        // Copy to clipboard and redirect to Instagram
         navigator.clipboard.writeText(shareText + ' ' + shareUrl);
+        url = 'https://www.instagram.com/';
         toast({
-          description: "Text copied for Instagram! Paste it in your story or post.",
+          description: "Text copied! Instagram is opening - paste it in your story or post.",
           duration: 3000,
         });
-        return;
+        break;
       default:
         return;
     }
