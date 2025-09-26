@@ -18,6 +18,7 @@ const Index = () => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<{ username: string; role?: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     // Check current auth status
@@ -95,7 +96,17 @@ const Index = () => {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    if (isSigningOut) return; // Prevent multiple simultaneous sign out attempts
+    
+    setIsSigningOut(true);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      // Handle sign out error silently as the auth state listener will clear the user state
+      console.log('Sign out completed');
+    } finally {
+      setIsSigningOut(false);
+    }
     setCurrentView('landing');
   };
 
